@@ -19,9 +19,13 @@ const storage = multer.diskStorage({
     }
   });
   
-  const upload = multer({ storage });
+//   const upload = multer({ storage });
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5 MB file size limit
+});
 
-mongoose.connect("mongodb://localhost:27017/Student_Form")
+mongoose.connect("mongodb://127.0.0.1:27017/Student_Form")
     .then(() => console.log("MongoDB connected"))
     .catch((err) => console.error("Error While Connecting MongoDB:", err));
     
@@ -35,10 +39,13 @@ const studentSchema = new mongoose.Schema({
     residentialStreet2Address: String,
     parmanentStreet1Address: String,
     parmanentStreet2Address: String,
+    fileName1: String,
+    fileName2: String,
+    fileType1: String,
+    fileType2: String,
     documents: [{
-        filename: String,
-        type: String,
-        path: String
+        filename: String, // Corrected field definition
+       
     }]
 });
 
@@ -47,7 +54,7 @@ const Student = mongoose.model('Student', studentSchema);
 // Route to add student data
 app.post('/students', upload.array('documents', 2), async (req, res) => {
     try {
-        const { firstName, lastName, email, dateOfBirth, residentialStreet1Address, residentialStreet2Address, parmanentStreet1Address, parmanentStreet2Address } = req.body;
+        const { firstName, lastName, email, dateOfBirth, residentialStreet1Address, residentialStreet2Address, parmanentStreet1Address, parmanentStreet2Address,fileName1,fileName2,fileType1,fileType2  } = req.body;
         
         // Map uploaded files to required format
         const documents = req.files && Array.isArray(req.files) ? 
@@ -68,6 +75,10 @@ app.post('/students', upload.array('documents', 2), async (req, res) => {
             residentialStreet2Address,
             parmanentStreet1Address,
             parmanentStreet2Address,
+            fileName1,
+            fileName2,
+            fileType1,
+            fileType2,
             documents
         });
       
@@ -77,7 +88,7 @@ app.post('/students', upload.array('documents', 2), async (req, res) => {
         res.status(201).json({ message: 'Student data added successfully' });
     } catch (err) {
         console.error('Error while adding student data:', err);
-        res.status(500).json({ error: 'An error occurred while adding student data' });
+        res.status(500).json({ error: 'An error occurred while adding student data', errorMessage: err.message });
     }
 });
 
